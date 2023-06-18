@@ -1,0 +1,23 @@
+<div style="font-family: 'Courier New', Courier; background-color: white; color: black;">
+Your account has been deleted.<br/>
+<br/>
+Next possible steps are:<br/>
+<br/>
+<span style="color: ForestGreen;"># Recreate your account</span><br/>
+<div style="border-radius: 0.5em; padding: 0.6em; background-color: silver; color: #404040;">
+curl -w "%{http_code}\n" <%= baseurl %>/api/user -d <%= email %>
+</div>
+<br/>
+We are here for you! 
+<br/>
+<br/>
+Just reply and let us know how we can better serve you.
+<br/>
+<br/>
+https://firstmail.dev
+<br/>
+https://github.com/FirstmailDev
+<br/>
+https://www.patreon.com/Firstmail
+<br/>
+</div>

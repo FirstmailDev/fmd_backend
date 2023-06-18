@@ -1,0 +1,60 @@
+<div style="font-family: 'Courier New', Courier; background-color: white; color: black;">
+This is your user ID:<br/>
+<br/>
+<b>ID:</b> <%= id %><br/>
+<b>Email:</b> <%= email %><br/>
+<br/>
+Next possible steps are:<br/>
+<br/>
+<span style="color: ForestGreen;"># Generate an ed25519 ssh key pair</span><br/>
+<div style="border-radius: 0.5em; padding: 0.6em; background-color: silver; color: #404040;">
+ssh-keygen -t ed25519
+</div>
+<br/>
+<span style="color: ForestGreen;"># Upload your ed25519 public key (256 byte size limit)</span><br/>
+<div style="border-radius: 0.5em; padding: 0.6em; background-color: silver; color: #404040;">
+curl -w "%{http_code}\n" <%= baseurl %>/api/user/<%= id %> -X PUT -H "Gak-Token: <%= token %>" -d @$HOME/.ssh/id_ed25519.pub
+</div>
+<br/>
+<span style="color: ForestGreen;"># Show your current public key</span><br/>
+<div style="border-radius: 0.5em; padding: 0.6em; background-color: silver; color: #404040;">
+curl -w "\n%{http_code}\n" <%= baseurl %>/api/user/<%= id %>
+</div>
+<br/>
+<span style="color: ForestGreen;"># Install the openssh plugin</span><br/>
+<div style="border-radius: 0.5em; padding: 0.6em; background-color: silver; color: #404040;">
+sudo apt install git curl coreutils<br/>
+git clone https://github.com/FirstmailDev/fmd_openssh.git<br/>
+fmd_openssh/install <%= id %><br/>
+rm -fr fmd_openssh
+</div>
+<br/>
+<span style="color: ForestGreen;"># Delete your account (ID non recoverable)</span><br/>
+<div style="border-radius: 0.5em; padding: 0.6em; background-color: silver; color: #404040;">
+curl -w "%{http_code}\n" <%= baseurl %>/api/user/<%= id %> -X DELETE -H "Gak-Token: <%= token %>"
+</div>
+<br/>
+<span style="color: ForestGreen;"># Recover access to your account</span><br/>
+<div style="border-radius: 0.5em; padding: 0.6em; background-color: silver; color: #404040;">
+curl -w "%{http_code}\n" <%= baseurl %>/api/user -d <%= email %>
+</div>
+<br/>
+<b>Notice</b>: Gak-Tokens are only valid for 5 minutes after generation. The execution window for all commands above that use a Gak-Token is 5 minutes from this moment. You can execute a recover access command at any time to get another 5 minute window.
+<br/>
+<br/>
+<b>Notice</b>: In order to optimize service availability for real users, accounts that do not upload their public key in 24 hours after creation will be considered abandoned and will be removed.
+<br/>
+<br/>
+We are here for you! 
+<br/>
+<br/>
+Just reply and let us know how we can better serve you.
+<br/>
+<br/>
+https://firstmail.dev
+<br/>
+https://github.com/FirstmailDev
+<br/>
+https://www.patreon.com/Firstmail
+<br/>
+</div>

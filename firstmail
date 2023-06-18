@@ -1,0 +1,76 @@
+#!/bin/bash -x
+
+OSNAME="$(uname -s)"
+
+# tmux ls
+# tmux detach ctrl+b d
+# tmux a //athach to unique session
+# tmux a -t firstmail
+case $1 in
+  # dev station remote commands
+  deploy)
+    if [[ ! "$OSNAME" =~ "Linux" ]]; then
+      echo "Linux required to deploy"
+      exit
+    fi
+    MIX_ENV=prod mix release --overwrite
+    rsync firstmail firstmail.dev:bin/
+    ssh firstmail.dev bin/firstmail stop 
+    ssh firstmail.dev bin/firstmail setup 
+    # remove old priv files (duplicated migration)
+    rsync --delete -r _build/prod/rel/firstmail/ firstmail.dev:firstmail/backend
+    ssh firstmail.dev bin/firstmail tmux 
+  ;;
+  fetch-backup)
+    rm .database/firstmail_dev.*
+    ssh firstmail.dev sqlite3 firstmail/database/firstmail_rel.db '".backup /tmp/gak-backup.db"'
+    scp firstmail.dev:/tmp/gak-backup.db .database/firstmail_dev.db
+    #sqlite3 .database/firstmail_dev.db "select * from users"
+  ;;
+  fetch-dump)
+    rm .database/firstmail_dev.*
+    ssh firstmail.dev sqlite3 firstmail/database/firstmail_rel.db ".dump" | sqlite3 .database/firstmail_dev.db
+    #sqlite3 .database/firstmail_dev.db "select * from users"
+  ;;
+  # dev station local commands
+  local)
+    # sshuttle -r firstmail.dev 0.0.0.0/0
+    MIX_ENV=prod mix release --overwrite
+    export FMD_MAILER_ENABLED=true
+    export FMD_DATABASE_PATH=.database/firstmail_rel.db 
+    _build/prod/rel/firstmail/bin/firstmail start
+  ;;
+  # server local commands
+  letsencrypt)
+    V2="--server https://acme-v02.api.letsencrypt.org/directory"
+    sudo service nginx stop
+    sudo letsencrypt certonly --standalone -d firstmail.dev --force-renew $V2
+    sudo letsencrypt certonly --standalone -d www.firstmail.dev --force-renew $V2
+    sudo service nginx start  
+  ;;
+  setup)
+    mkdir -p ~/firstmail/backend/
+    mkdir -p ~/firstmail/database/
+  ;;
+  sqlite)
+    # bash replaces *
+    # .quite
+    # .schema
+    # select * from users;
+    sqlite3 ~/firstmail/database/firstmail_rel.db
+  ;;
+  tmux)
+    tmux new -d -s firstmail $0 start
+  ;;
+  start)
+    export FMD_MAILER_ENABLED=true
+    export FMD_DATABASE_PATH=~/firstmail/database/firstmail_rel.db 
+    ~/firstmail/backend/bin/firstmail start
+  ;;
+  stop)
+    ~/firstmail/backend/bin/firstmail stop
+  ;;
+  *)
+    ~/firstmail/backend/bin/firstmail "$@"
+  ;;
+esac
