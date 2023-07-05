@@ -9,7 +9,7 @@ Next possible steps are:<br/>
 <span style="color: ForestGreen;"># Setup your domain DNS records</span><br/>
 <div style="border-radius: 0.5em; padding: 0.6em; background-color: silver; color: #404040; white-space: nowrap;">
 1) <%= domain %> TXT "v=spf1 include:firstmail.dev -all"<br/><br/>
-2) _dmarc.<%= domain %> TXT "v=DMARC1; p=none; rua=mailto:<%= email %>"<br/><br/>
+2) _dmarc.<%= domain %> TXT "v=DMARC1; p=reject; rua=mailto:<%= email %>"<br/><br/>
 3) dkim._domainkey.<%= domain %> TXT "v=DKIM1; p=<%= pubkey %>;"
 </div>
 <br/>
@@ -22,7 +22,7 @@ curl -v <%= baseurl %>/api/user/<%= id %>  \<br/>
 -H "Fmd-Subject: Testing email subject" \<br/>
 -H "Fmd-To: user1@<%= domain %>" \<br/>
 -H "Fmd-To: user2@<%= domain %>" \<br/>
--d "Testing email &lt;b&gt;body&lt;/b&gt;"
+-d "&lt;html&gt;Testing email &lt;b&gt;body&lt;/b&gt;&lt;/html&gt;"
 </div>
 <br/>
 <span style="color: ForestGreen;"># Delete your account (ID non recoverable)</span><br/>

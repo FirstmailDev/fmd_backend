@@ -27,6 +27,7 @@ config :firstmail,
   dos_delay: delay,
   server_port: String.to_integer(port),
   mailer_config: [
+    hostname: "vps03.firstmail.dev",
     baseurl: "http://localhost:#{port}",
     pubkey: File.read!(".secrets/public.pem"),
     privkey: File.read!(".secrets/private.pem"),

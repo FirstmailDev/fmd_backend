@@ -11,7 +11,7 @@ defmodule Firstmail.Sender do
     # DNS.resolve "dkim._domainkey.firstmail.one", :txt
     if enabled do
       with {:ok, [['v=spf1 include:firstmail.dev -all']]} <- DNS.resolve(domain, :txt),
-           dmarc <- 'v=DMARC1; p=none; rua=mailto:#{from}',
+           dmarc <- 'v=DMARC1; p=reject; rua=mailto:#{from}',
            {:ok, [[^dmarc]]} <-
              DNS.resolve("_dmarc.#{domain}", :txt),
            {:ok, [list]} <- DNS.resolve("dkim._domainkey.#{domain}", :txt),
@@ -50,6 +50,7 @@ defmodule Firstmail.Sender do
   end
 
   def send_sync_mxdns(config, email) do
+    hostname = Keyword.fetch!(config, :hostname)
     privkey = Keyword.fetch!(config, :privkey)
 
     %{
@@ -80,6 +81,7 @@ defmodule Firstmail.Sender do
       :mimemail.encode(
         {mime_1, mime_2,
          [
+           {"List-Unsubscribe", "<mailto:#{reply}?subject=Unsubscribe>"},
            {"Subject", subject},
            {"Reply-To", reply},
            {"From", from},
@@ -93,7 +95,7 @@ defmodule Firstmail.Sender do
     send_opts = [
       tls: :always,
       relay: domain,
-      # hostname: "firstmail.dev",
+      hostname: hostname,
       tls_options: [
         verify: :verify_peer,
         depth: 99,

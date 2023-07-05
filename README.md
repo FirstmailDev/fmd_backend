@@ -86,10 +86,14 @@ sqlite3 .database/firstmail_dev.db ".schema users"
 - include:_spf.google.com required when destination is a gmail alias
 - mail-tester.com expects rDNS for IP to point to firstmail.dev 
 - mail-tester.com expects <html> tag
+- mail-tester.com expects domain older than 7 days
+- mail-tester.com new IP blacklisted twise
+- mail-tester.com score 7/10 
 
 ## Future
 
 - Send from *@domain
+- Unsubscribe link
 - Swoosh adapter
 - Async sending
 - Multi result

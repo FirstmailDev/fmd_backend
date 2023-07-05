@@ -3,6 +3,7 @@ defmodule Firstmail.Mailer do
 
   @mailer "mailer@firstmail.dev"
   @replyto "hello@firstmail.dev"
+  @unsubscribe "unsubscribe@firstmail.dev"
 
   def send_create(config, user) do
     send_template(config, :create, user)
@@ -47,6 +48,7 @@ defmodule Firstmail.Mailer do
   end
 
   def send_sync_mxdns(config, to, subject, body) do
+    hostname = Keyword.fetch!(config, :hostname)
     privkey = Keyword.fetch!(config, :privkey)
 
     dkim_opts = [
@@ -60,6 +62,7 @@ defmodule Firstmail.Mailer do
       :mimemail.encode(
         {"text", "html",
          [
+           {"List-Unsubscribe", "<mailto:#{@unsubscribe}?subject=Unsubscribe>"},
            {"Subject", subject},
            {"From", "Firstmail <#{@mailer}>"},
            {"Reply-To", "Firstmail <#{@replyto}>"},
@@ -73,7 +76,7 @@ defmodule Firstmail.Mailer do
     send_opts = [
       tls: :always,
       relay: domain,
-      # hostname: "firstmail.dev",
+      hostname: hostname,
       tls_options: [
         verify: :verify_peer,
         depth: 99,
