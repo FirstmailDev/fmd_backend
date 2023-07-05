@@ -38,6 +38,7 @@ case $1 in
     MIX_ENV=prod mix release --overwrite
     export FMD_MAILER_ENABLED=true
     export FMD_DATABASE_PATH=.database/firstmail_rel.db 
+    export FMD_HOST_NAME=vps03.firstmail.dev
     _build/prod/rel/firstmail/bin/firstmail start
   ;;
   # server local commands
@@ -65,6 +66,7 @@ case $1 in
   start)
     export FMD_MAILER_ENABLED=true
     export FMD_DATABASE_PATH=~/firstmail/database/firstmail_rel.db 
+    export FMD_HOST_NAME=vps03.firstmail.dev
     ~/firstmail/backend/bin/firstmail start
   ;;
   stop)
