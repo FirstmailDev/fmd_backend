@@ -1,13 +1,29 @@
 defmodule Firstmail.Sender do
   alias Firstmail.Utils
 
-  def send(config, email) do
+  def send(config, %{from: from} = email) do
     enabled = Keyword.get(config, :enabled, false)
+    pubkey = Keyword.fetch!(config, :pubkey)
+    domain = Utils.domain(from)
 
+    # DNS.resolve "firstmail.one", :txt
+    # DNS.resolve "_dmarc.firstmail.one", :txt
+    # DNS.resolve "dkim._domainkey.firstmail.one", :txt
     if enabled do
-      String.split(email.to, ", ", trim: true)
-      |> Enum.map(fn to -> send_one(config, email, to) end)
-      |> multi_result()
+      with {:ok, [['v=spf1 include:firstmail.dev -all']]} <- DNS.resolve(domain, :txt),
+           dmarc <- 'v=DMARC1; p=none; rua=mailto:#{from}',
+           {:ok, [[^dmarc]]} <-
+             DNS.resolve("_dmarc.#{domain}", :txt),
+           {:ok, [list]} <- DNS.resolve("dkim._domainkey.#{domain}", :txt),
+           true <- is_list(list),
+           dkim <- "v=DKIM1; p=#{pubkey};",
+           ^dkim <- Enum.join(list) do
+        String.split(email.to, ", ", trim: true)
+        |> Enum.map(fn to -> send_one(config, email, to) end)
+        |> multi_result()
+      else
+        res -> {:error, res}
+      end
     else
       {:ok, :disabled}
     end

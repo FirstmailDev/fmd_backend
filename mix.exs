@@ -31,7 +31,8 @@ defmodule Firstmail.MixProject do
       {:ecto_sqlite3, "~> 0.10.3"},
       {:certifi, "~> 2.11"},
       {:gen_smtp, "~> 1.2"},
-      {:iconv, "~> 1.0"}
+      {:iconv, "~> 1.0"},
+      {:dns, "~> 2.4"}
     ]
   end
 

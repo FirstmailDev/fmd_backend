@@ -82,7 +82,7 @@ sqlite3 .database/firstmail_dev.db ".schema users"
 
 ## Fixme
 
-- Sending to same domain fails SPF (firstmail.one to firstmail.one) but firstmail.one to firstmail.zip passes SPF. Maybe that it was a:XXX instead of include:XXX? -> Check later.
+- sending to same gmail controlled domain requires include:firstmail.dev instead of a:fistmail.dev to pass SPF. Failure seem to be when firstmail.one destination gets forwarded to my alias from a gmail server. include:_spf.google.com in firstmail.dev SPF record seems to be the reason it work with include:firstmail.dev.
 - mail-tester.com expects rDNS for IP to point to firstmail.dev 
 - mail-tester.com expects <html> tag
 
@@ -91,6 +91,7 @@ sqlite3 .database/firstmail_dev.db ".schema users"
 - Swoosh adapter
 - Async sending
 - Multi result
+- Attachments
 
 ## References
 
