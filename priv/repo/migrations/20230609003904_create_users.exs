@@ -5,7 +5,6 @@ defmodule Firstmail.Repo.Migrations.CreateUsers do
     create table(:users, primary_key: false) do
       add(:id, :binary_id, primary_key: true)
       add(:email, :string)
-      add(:data, :string)
       add(:token, :string)
 
       timestamps()

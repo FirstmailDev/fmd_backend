@@ -1,6 +1,8 @@
 defmodule Firstmail.Application do
   @moduledoc false
 
+  alias Firstmail.Utils
+
   use Application
   require Logger
 
@@ -9,6 +11,7 @@ defmodule Firstmail.Application do
     port = Application.fetch_env!(:firstmail, :server_port)
     delay = Application.fetch_env!(:firstmail, :dos_delay)
     mailer = Application.fetch_env!(:firstmail, :mailer_config)
+    mailer = Keyword.update!(mailer, :pubkey, &Utils.parse_pem/1)
     database = Application.fetch_env!(:firstmail, Firstmail.Repo)[:database]
     Logger.info("Port #{port}")
     Logger.info("Db #{database}")

@@ -1,7 +1,7 @@
 defmodule Firstmail.UserChangesetTest do
   use Firstmail.DataCase, async: false
 
-  @empty %{email: nil, data: "EMPTY", token: "EMPTY"}
+  @empty %{email: nil, token: "EMPTY"}
 
   test "email must be non blank" do
     changeset = User.changeset(%User{}, %{@empty | email: ""})

@@ -6,13 +6,15 @@ MVP
 - single domain per-email and from-email
 - email dns instructions (email confirmation)
 - curl as client
-- swoosh adapter
 - free for testing (to any domain)
-- dedicated server offer
+- dmarc rua to registered email
+- send from any domain email (only one dmarc record)
+
+API
 
 - POST api/user -d name@domain.com -> emails DNS instructions with ID and first token
   - reposting would generate a new email with same ID, same DNS instructions but a new token
-- POST api/user/ID + token + from|subject|reply|mime|to(s) headers + body
+- POST api/user/ID + token + subject|reply|mime|to(s) headers + body
   - send async result to registered email
 - DELETE api/user/ID + token
 
@@ -32,12 +34,21 @@ Errors
 ssh-keygen -t ed25519
 cat ~/.ssh/id_ed25519.pub
 iex -S mix
-curl -v localhost:31682/api/user -d user@firstmail.dev
+curl -v localhost:31682/api/user -d sender@firstmail.one
 sqlite3 .database/firstmail_dev.db "select * from users"
-curl -v localhost:31682/api/user/01H2H215K5A56YBNKVE3E008ST
-curl -v localhost:31682/api/user/01H2H215K5A56YBNKVE3E008ST -X PUT -H "Gak-Token: 01H2H215K5JXZ7HFMT8EA96RHY" -d "UPDATED"
-curl -v localhost:31682/api/user/01H2H215K5A56YBNKVE3E008ST -X PUT -H "Gak-Token: 01H2H215K5JXZ7HFMT8EA96RHY" -d @$HOME/.ssh/id_ed25519.pub
-curl -v localhost:31682/api/user/01H2H215K5A56YBNKVE3E008ST -X DELETE -H "Gak-Token: 01H2H1WV7SMEJR4E19HY7S0J38"
+
+# text/html | text/plain (default)
+curl -v localhost:31682/api/user/01H2H215K5A56YBNKVE3E008ST 
+-H "Fmd-Token: 01H2H215K5JXZ7HFMT8EA96RHY" \
+-H "Fmd-Mime: text/html" \
+-H "Fmd-Reply: reply@firstmail.one" \
+-H "Fmd-Subject: Testing email subject" \
+-H "Fmd-To: user1@firstmail.zip" \
+-H "Fmd-To: user2@firstmail.zip" \
+-d "Testing email body"
+
+curl -v localhost:31682/api/user/01H2H215K5A56YBNKVE3E008ST -X DELETE \
+-H "Fmd-Token: 01H2H1WV7SMEJR4E19HY7S0J38"
 
 # deploy to firstmail.dev
 ./firstmail deploy
@@ -57,11 +68,6 @@ sshuttle -r firstmail.dev 0.0.0.0/0
 ./firstmail fetch-backup
 ```
 
-## Todo
-
-- Cache headers
-- Purge cron job
-
 ## Howto
 
 ```bash
@@ -74,15 +80,21 @@ sqlite3 .database/firstmail_test.db ".schema users"
 sqlite3 .database/firstmail_dev.db ".schema users"
 ```
 
+## Fixme
+
+- Sending to same domain fails SPF (firstmail.one to firstmail.one) but firstmail.one to firstmail.zip passes SPF. Maybe that it was a:XXX instead of include:XXX? -> Check later.
+- mail-tester.com expects rDNS for IP to point to firstmail.dev 
+- mail-tester.com expects <html> tag
+
 ## Future
 
-- CI/CD
-- CDN
-- 2FA
-- CLI
+- Swoosh adapter
+- Async sending
+- Multi result
 
 ## References
 
+- https://www.mail-tester.com/
 - https://github.com/woylie/ecto_ulid
 - https://www.davekuhlman.org/cowboy-rest-add-get-update-list.html
 - https://ninenines.eu/docs/en/cowboy/2.9/guide/rest_flowcharts/

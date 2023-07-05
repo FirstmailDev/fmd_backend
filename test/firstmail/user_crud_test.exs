@@ -1,33 +1,28 @@
 defmodule Firstmail.UserCrudTest do
   use Firstmail.DataCase, async: false
 
-  @empty %{email: nil, data: "PUBKEY", token: "TOKEN"}
+  @empty %{email: nil, token: "TOKEN"}
 
   test "user crud test" do
     user = User.changeset(%User{}, %{@empty | email: "test@firstmail.dev"})
     assert {:ok, %User{} = user} = Repo.insert(user)
     assert 26 == String.length(user.id)
     assert user.email == "test@firstmail.dev"
-    assert user.data == "PUBKEY"
     assert user.token == "TOKEN"
     assert [%User{} = user] = Repo.all(User)
     assert 26 == String.length(user.id)
     assert user.email == "test@firstmail.dev"
-    assert user.data == "PUBKEY"
     assert user.token == "TOKEN"
     assert user = Repo.get(User, user.id)
     assert 26 == String.length(user.id)
     assert user.email == "test@firstmail.dev"
-    assert user.data == "PUBKEY"
     assert user.token == "TOKEN"
     assert user = Repo.get_by(User, id: user.id)
     assert 26 == String.length(user.id)
     assert user.email == "test@firstmail.dev"
-    assert user.data == "PUBKEY"
     assert user.token == "TOKEN"
     assert user = Repo.get_by(User, email: user.email)
     assert 26 == String.length(user.id)
-    assert user.data == "PUBKEY"
     assert user.token == "TOKEN"
   end
 
@@ -36,7 +31,6 @@ defmodule Firstmail.UserCrudTest do
     assert {:ok, %User{} = user} = Repo.insert(changeset)
     assert 26 == String.length(user.id)
     assert user.email == "test@firstmail.dev"
-    assert user.data == "PUBKEY"
     assert user.token == "TOKEN"
     changeset = User.changeset(user, %{})
     assert {:error, %Ecto.Changeset{} = result} = Repo.insert(changeset)
@@ -53,7 +47,6 @@ defmodule Firstmail.UserCrudTest do
     assert {:ok, %User{} = user} = Repo.insert(changeset)
     assert 26 == String.length(user.id)
     assert user.email == "test@firstmail.dev"
-    assert user.data == "PUBKEY"
     assert user.token == "TOKEN"
     Repo.delete_all(User)
     assert [] = Repo.all(User)

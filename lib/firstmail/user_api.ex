@@ -1,9 +1,15 @@
 defmodule Firstmail.UserApi do
   alias Firstmail.UserDb
   alias Firstmail.Mailer
+  alias Firstmail.Sender
 
   @max_body_len 256
-  @token_header "gak-token"
+  @token_header "fmd-token"
+  @to_header "fmd-to"
+  @mime_header "fmd-mime"
+  @reply_header "fmd-reply"
+  @subject_header "fmd-subject"
+  @mimes ["text/plain", "text/html"]
   @headers %{"content-type" => "text/plain"}
   @fail_delay 1000
 
@@ -27,11 +33,8 @@ defmodule Firstmail.UserApi do
     dos_delay(method, state)
 
     case method do
-      "GET" ->
-        get_user(req, state)
-
-      "PUT" ->
-        update_user(req, state)
+      "POST" ->
+        send_email(req, state)
 
       "DELETE" ->
         delete_user(req, state)
@@ -73,7 +76,7 @@ defmodule Firstmail.UserApi do
     with true <- is_binary(token),
          {:ok, _} <- Ecto.ULID.cast(id),
          {:ok, _} <- Ecto.ULID.cast(token),
-         user <- UserDb.find_by_id_and_token_5m(id, token),
+         user <- UserDb.find_by_id_and_token(id, token),
          true <- user != nil,
          {:ok, _res} <- UserDb.delete(user),
          {:ok, _res} <- Mailer.send_delete(mailer, user) do
@@ -87,39 +90,39 @@ defmodule Firstmail.UserApi do
     end
   end
 
-  def update_user(req, {_, %{mailer: mailer}} = state) do
+  def send_email(req, {_, %{mailer: mailer}} = state) do
     len = :cowboy_req.body_length(req)
     id = :cowboy_req.binding(:id, req)
     token = :cowboy_req.header(@token_header, req)
+    subject = :cowboy_req.header(@subject_header, req)
+    reply = :cowboy_req.header(@reply_header, req)
+    mime = :cowboy_req.header(@mime_header, req, "text/plain")
+    to = :cowboy_req.header(@to_header, req)
+    # "user1@firstmail.one, user2@firstmail.one"
+
+    email = %{
+      subject: subject,
+      reply: reply,
+      mime: mime,
+      to: to
+    }
 
     with true <- is_binary(token),
+         true <- is_binary(subject),
+         true <- is_binary(mime),
+         true <- Enum.member?(@mimes, mime),
+         true <- is_binary(to),
          {:ok, _} <- Ecto.ULID.cast(id),
          {:ok, _} <- Ecto.ULID.cast(token),
          true <- is_integer(len),
          true <- len > 0 and len <= @max_body_len,
-         {:ok, data, req} <- :cowboy_req.read_body(req),
-         true <- valid_user?(data),
-         user <- UserDb.find_by_id_and_token_5m(id, token),
+         {:ok, body, req} <- :cowboy_req.read_body(req),
+         user <- UserDb.find_by_id_and_token(id, token),
          true <- user != nil,
-         {:ok, user} <- UserDb.update_user(user, data),
-         {:ok, _res} <- Mailer.send_update(mailer, user) do
+         email <- Map.put(email, :body, body),
+         email <- Map.put(email, :from, user.email),
+         {:ok, _res} <- Sender.send(mailer, email) do
       req = :cowboy_req.reply(200, @headers, req)
-      {:ok, req, state}
-    else
-      _res ->
-        fail_delay()
-        req = :cowboy_req.reply(400, req)
-        {:ok, req, state}
-    end
-  end
-
-  def get_user(req, state) do
-    id = :cowboy_req.binding(:id, req)
-
-    with {:ok, _} <- Ecto.ULID.cast(id),
-         user <- UserDb.find_by_id(id),
-         true <- user != nil do
-      req = :cowboy_req.reply(200, @headers, user.data, req)
       {:ok, req, state}
     else
       _res ->
@@ -140,12 +143,5 @@ defmodule Firstmail.UserApi do
 
   defp fail_delay() do
     :timer.sleep(@fail_delay)
-  end
-
-  defp valid_user?(data) do
-    case String.split(data, " ") do
-      ["ssh-ed25519", _, _] -> true
-      _ -> false
-    end
   end
 end

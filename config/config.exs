@@ -28,9 +28,9 @@ config :firstmail,
   server_port: String.to_integer(port),
   mailer_config: [
     baseurl: "http://localhost:#{port}",
+    pubkey: File.read!(".secrets/public.pem"),
     privkey: File.read!(".secrets/private.pem"),
     create: EEx.compile_file("priv/templates/create.eex"),
-    update: EEx.compile_file("priv/templates/update.eex"),
     delete: EEx.compile_file("priv/templates/delete.eex"),
     enabled: System.get_env("FMD_MAILER_ENABLED", "false") |> String.to_atom()
   ],

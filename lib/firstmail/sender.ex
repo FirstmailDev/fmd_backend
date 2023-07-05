@@ -1,68 +1,72 @@
-defmodule Firstmail.Mailer do
+defmodule Firstmail.Sender do
   alias Firstmail.Utils
 
-  @mailer "mailer@firstmail.dev"
-  @replyto "hello@firstmail.dev"
-
-  def send_create(config, user) do
-    send_template(config, :create, user)
-  end
-
-  def send_update(config, user) do
-    send_template(config, :update, user)
-  end
-
-  def send_delete(config, user) do
-    send_template(config, :delete, user)
-  end
-
-  def send_template(config, template, user) do
+  def send(config, email) do
     enabled = Keyword.get(config, :enabled, false)
 
     if enabled do
-      {body, _bindings} = eval_template(config, template, user)
-      send_sync_mxdns(config, user.email, "ID #{user.id} next steps", body)
+      String.split(email.to, ", ", trim: true)
+      |> Enum.map(fn to -> send_one(config, email, to) end)
+      |> multi_result()
     else
       {:ok, :disabled}
     end
   end
 
-  def eval_template(config, template, user) do
-    baseurl = Keyword.fetch!(config, :baseurl)
-    quoted = Keyword.fetch!(config, template)
-    pubkey = Keyword.fetch!(config, :pubkey)
+  def multi_result(res_list) do
+    count =
+      res_list
+      |> Enum.map(fn
+        {:ok, _} -> 1
+        _ -> 0
+      end)
+      |> Enum.sum()
 
-    domain = Utils.domain(user.email)
-
-    bindings = [
-      baseurl: baseurl,
-      token: user.token,
-      email: user.email,
-      domain: domain,
-      pubkey: pubkey,
-      id: user.id
-    ]
-
-    Code.eval_quoted(quoted, bindings)
+    case Enum.count(res_list) do
+      ^count -> {:ok, res_list}
+      _ -> {:error, res_list}
+    end
   end
 
-  def send_sync_mxdns(config, to, subject, body) do
+  def send_one(config, email, to) do
+    email = Map.put(email, :to, to)
+    send_sync_mxdns(config, email)
+  end
+
+  def send_sync_mxdns(config, email) do
     privkey = Keyword.fetch!(config, :privkey)
+
+    %{
+      subject: subject,
+      reply: reply,
+      mime: mime,
+      body: body,
+      from: from,
+      to: to
+    } = email
+
+    reply =
+      case is_binary(reply) do
+        true -> reply
+        _ -> from
+      end
 
     dkim_opts = [
       {:s, "dkim"},
-      {:d, "firstmail.dev"},
+      {:d, Utils.domain(from)},
       {:private_key, {:pem_plain, privkey}}
     ]
+
+    [mime_1, mime_2] = String.split(mime, "/")
 
     # default encoding utf-8 if iconv is present
     signed_mail_body =
       :mimemail.encode(
-        {"text", "html",
+        {mime_1, mime_2,
          [
            {"Subject", subject},
-           {"From", "Firstmail <#{@mailer}>"},
-           {"Reply-To", "Firstmail <#{@replyto}>"},
+           {"Reply-To", reply},
+           {"From", from},
            {"To", to}
          ], %{content_type_params: [{"charset", "utf-8"}]}, body},
         dkim: dkim_opts
@@ -87,7 +91,7 @@ defmodule Firstmail.Mailer do
     result =
       :gen_smtp_client.send_blocking(
         {
-          @mailer,
+          from,
           [to],
           signed_mail_body
         },

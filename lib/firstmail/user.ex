@@ -7,7 +7,6 @@ defmodule Firstmail.User do
   @foreign_key_type Ecto.ULID
   schema "users" do
     field(:email, :string)
-    field(:data, :string)
     field(:token, :string)
 
     timestamps()
@@ -16,8 +15,8 @@ defmodule Firstmail.User do
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:email, :data, :token])
-    |> validate_required([:email, :data, :token])
+    |> cast(attrs, [:email, :token])
+    |> validate_required([:email, :token])
     |> validate_format(
       :email,
       ~r/^[-_a-zA-Z0-9]+(\.[-_a-zA-Z0-9]+)*@([-_a-zA-Z0-9]+\.)+[a-zA-Z]+$/
