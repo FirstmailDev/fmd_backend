@@ -8,7 +8,7 @@ MVP
 - curl as client
 - free for testing (to any domain)
 - dmarc rua to registered email
-- send from any domain email (only one dmarc record)
+- send only from registed email
 
 API
 
@@ -82,12 +82,14 @@ sqlite3 .database/firstmail_dev.db ".schema users"
 
 ## Fixme
 
-- sending to same gmail controlled domain requires include:firstmail.dev instead of a:fistmail.dev to pass SPF. Failure seem to be when firstmail.one destination gets forwarded to my alias from a gmail server. include:_spf.google.com in firstmail.dev SPF record seems to be the reason it work with include:firstmail.dev.
+- dmarc requires an email making it complicated to handle multiple users for same domain
+- include:_spf.google.com required when destination is a gmail alias
 - mail-tester.com expects rDNS for IP to point to firstmail.dev 
 - mail-tester.com expects <html> tag
 
 ## Future
 
+- Send from *@domain
 - Swoosh adapter
 - Async sending
 - Multi result

@@ -8,14 +8,14 @@ Next possible steps are:<br/>
 <br/>
 <span style="color: ForestGreen;"># Setup your domain DNS records</span><br/>
 <div style="border-radius: 0.5em; padding: 0.6em; background-color: silver; color: #404040; white-space: nowrap;">
-<%= domain %> TXT "v=spf1 include:firstmail.dev -all"<br/>
-_dmarc.<%= domain %> TXT "v=DMARC1; p=none; rua=mailto:<%= email %>"<br/>
-dkim._domainkey.<%= domain %> TXT "v=DKIM1; p=<%= pubkey %>;"
+1) <%= domain %> TXT "v=spf1 include:firstmail.dev -all"<br/><br/>
+2) _dmarc.<%= domain %> TXT "v=DMARC1; p=none; rua=mailto:<%= email %>"<br/><br/>
+3) dkim._domainkey.<%= domain %> TXT "v=DKIM1; p=<%= pubkey %>;"
 </div>
 <br/>
 <span style="color: ForestGreen;"># Send an email using curl</span><br/>
 <div style="border-radius: 0.5em; padding: 0.6em; background-color: silver; color: #404040;">
-curl -v <%= baseurl %>/api/user/<%= id %>
+curl -v <%= baseurl %>/api/user/<%= id %>  \<br/>
 -H "Fmd-Token: <%= token %>" \<br/>
 -H "Fmd-Mime: text/html" \<br/>
 -H "Fmd-Reply: reply@<%= domain %>" \<br/>
