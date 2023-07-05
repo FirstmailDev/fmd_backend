@@ -93,7 +93,7 @@ defmodule Firstmail.Sender do
     send_opts = [
       tls: :always,
       relay: domain,
-      hostname: "firstmail.dev",
+      # hostname: "firstmail.dev",
       tls_options: [
         verify: :verify_peer,
         depth: 99,
